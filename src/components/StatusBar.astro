@@ -1,0 +1,15 @@
+---
+// The sticky terminal status bar at the very top of every page.
+// Left side shows user@host:path; the right side is a slot the page fills in.
+import { SITE } from '../consts';
+
+interface Props {
+  path?: string;
+}
+const { path = '~/portfolio' } = Astro.props;
+---
+
+<div class="statusbar">
+  <span class="seg"><b>{SITE.shell}</b>:{path}</span>
+  <span class="seg"><slot /></span>
+</div>

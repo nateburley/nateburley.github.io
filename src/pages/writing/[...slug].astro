@@ -1,0 +1,76 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+import { SITE } from '../../consts';
+
+export async function getStaticPaths() {
+  const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+    (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+  );
+  return posts.map((post, i) => ({
+    params: { slug: post.id },
+    // `next` is the next-older post, shown at the bottom of the article.
+    props: { post, next: posts[i + 1] ?? null },
+  }));
+}
+
+const { post, next } = Astro.props;
+const { Content } = await render(post);
+
+const fmtDate = (d: Date) => d.toISOString().slice(0, 10);
+const readMins = (body: string) => Math.max(1, Math.round(body.trim().split(/\s+/).length / 200));
+const mins = readMins(post.body ?? '');
+---
+
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description}
+  type="article"
+  active="writing"
+  statusPath="~/portfolio/writing"
+  mainClass="narrow"
+>
+  <Fragment slot="status">
+    <span class="led"></span>rendering: <span class="ok">{post.id}.md</span> · reading time ~{mins} min
+  </Fragment>
+
+  <article class="article">
+    <div class="crumb">
+      <span class="p">$</span> cat writing/{post.id}.md &nbsp;<a href="/writing">← all notes</a>
+    </div>
+    <div class="eyebrow">field note</div>
+    <h1>{post.data.title}</h1>
+    <div class="post-meta">
+      <span>{fmtDate(post.data.date)}</span>
+      <span>~{mins} min read</span>
+      {post.data.tags.map((t) => <span class="tag">#{t}</span>)}
+    </div>
+    <p class="dek">{post.data.description}</p>
+    <div class="rule">· · ·</div>
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <div class="author">
+      <img src="/images/nate_headshot.jpeg" alt="Nate Burley" />
+      <div>
+        <div class="n">{SITE.shell}</div>
+        <div class="b">ML engineer in Portland. Writes about models that quietly work.</div>
+      </div>
+    </div>
+
+    {
+      next && (
+        <a class="next" href={`/writing/${next.id}/`}>
+          <span class="arr">→</span>
+          <span class="lab">NEXT FIELD NOTE</span>
+          <br />
+          <span class="ttl">{next.data.title}</span>
+          <br />
+          <span style="color:var(--dim); font-size:13.5px;">{next.data.description}</span>
+        </a>
+      )
+    }
+  </article>
+</BaseLayout>

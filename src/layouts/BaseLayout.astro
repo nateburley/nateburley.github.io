@@ -1,0 +1,54 @@
+---
+// The shell every page renders inside: <head>, status bar, sidebar, main, footer.
+import BaseHead from '../components/BaseHead.astro';
+import StatusBar from '../components/StatusBar.astro';
+import Sidebar from '../components/Sidebar.astro';
+import { SITE } from '../consts';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  type?: 'website' | 'article';
+  active?: string;
+  statusPath?: string;
+  mainClass?: string;
+}
+
+const {
+  title,
+  description,
+  image,
+  type = 'website',
+  active,
+  statusPath = '~/portfolio',
+  mainClass = '',
+} = Astro.props;
+
+const year = new Date().getFullYear();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={title} description={description} image={image} type={type} />
+  </head>
+  <body>
+    <StatusBar path={statusPath}>
+      <slot name="status">
+        <span class="led"></span>status: <span class="ok">open to ML/DS roles</span> · {SITE.location} · uptime: since 2018
+      </slot>
+    </StatusBar>
+
+    <div class="frame">
+      <Sidebar active={active} />
+      <main class={mainClass}>
+        <slot />
+        <footer class="foot">
+          <span>© {year} {SITE.author} — built from scratch</span>
+          <span>$ exit 0</span>
+        </footer>
+      </main>
+    </div>
+  </body>
+</html>

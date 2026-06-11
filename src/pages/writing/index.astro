@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+
+const fmtDate = (d: Date) => d.toISOString().slice(0, 10);
+const readMins = (body: string) => Math.max(1, Math.round(body.trim().split(/\s+/).length / 200));
+---
+
+<BaseLayout
+  title="Writing"
+  description="Field notes on machine learning by Nate Burley — short, technical posts on the models he builds."
+  active="writing"
+  statusPath="~/portfolio/writing"
+  mainClass="narrow"
+>
+  <Fragment slot="status">
+    <span class="led"></span>dir: <span class="ok">writing/</span> · {posts.length} field notes
+  </Fragment>
+
+  <div class="crumb"><span class="p">$</span> ls -lt writing/</div>
+  <div class="eyebrow">~ writing</div>
+  <h1>Field Notes</h1>
+  <p class="section-intro">
+    Notes on the models I build and the ideas behind them. Short, technical, and occasionally opinionated.
+  </p>
+
+  <div class="notes">
+    {
+      posts.map((post) => (
+        <a class="note" href={`/writing/${post.id}/`}>
+          <div class="meta">
+            <span class="arrow">▸</span> {fmtDate(post.data.date)} · {readMins(post.body ?? '')} min
+            {post.data.tags.length > 0 && <> · {post.data.tags.join(' · ')}</>}
+          </div>
+          <div class="ttl">{post.data.title}</div>
+          <div class="dek">{post.data.description}</div>
+        </a>
+      ))
+    }
+  </div>
+
+  <a class="feed-link" href="/rss.xml">rss feed ▸</a>
+</BaseLayout>

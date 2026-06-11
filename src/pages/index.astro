@@ -1,0 +1,194 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { getCollection } from 'astro:content';
+import { PROJECTS } from '../data/projects';
+import { SITE, SOCIAL, SKILLS, FORMSPREE_ID } from '../consts';
+
+// Latest 3 posts for the writing preview.
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+const latest = posts.slice(0, 3);
+
+const fmtDate = (d: Date) => d.toISOString().slice(0, 10);
+const readMins = (body: string) => Math.max(1, Math.round(body.trim().split(/\s+/).length / 200));
+
+const formAction = FORMSPREE_ID ? `https://formspree.io/f/${FORMSPREE_ID}` : '#';
+---
+
+<BaseLayout active="about" statusPath="~/portfolio">
+  <div class="crumb"><span class="p">$</span> <span id="typed"></span><span class="cursor" aria-hidden="true"></span></div>
+
+  <!-- ABOUT ------------------------------------------------------------- -->
+  <section id="about">
+    <div class="eyebrow">~ whoami</div>
+    <h1>Nate Burley</h1>
+    <div class="sub">{SITE.tagline}</div>
+    <p class="lead">
+      I'm an inquisitive, experienced machine learning engineer with a proven record of
+      <span class="hl">leveraging cutting-edge methods to solve hard data problems</span> — from
+      sensor-stream classification to knowledge graphs, reinforcement learning, and generative
+      models. I like building things that quietly work, and writing about why they do.
+    </p>
+    <div class="actions">
+      <a class="btn solid" href="#work">view projects ▸</a>
+      <a class="btn" href="/docs/NateBurley_Resume.pdf">resume.pdf ▾</a>
+      <a class="btn" href="#contact">get in touch</a>
+    </div>
+    <div class="chips">
+      {SKILLS.map((s) => <span>{s}</span>)}
+    </div>
+  </section>
+
+  <!-- WORK -------------------------------------------------------------- -->
+  <section id="work">
+    <h2><span class="n">02</span>recent work</h2>
+    <div class="projects">
+      {PROJECTS.map((p, i) => <ProjectCard project={p} last={i === PROJECTS.length - 1} />)}
+    </div>
+  </section>
+
+  <!-- WRITING ---------------------------------------------------------- -->
+  <section id="writing">
+    <h2><span class="n">03</span>writing/ — field notes</h2>
+    <p class="section-intro">
+      Notes on the models I build and the ideas behind them. Short, technical, and occasionally opinionated.
+    </p>
+    <div class="notes">
+      {
+        latest.map((post) => (
+          <a class="note" href={`/writing/${post.id}/`}>
+            <div class="meta">
+              <span class="arrow">▸</span> {fmtDate(post.data.date)} · {readMins(post.body ?? '')} min
+              {post.data.tags.length > 0 && <> · {post.data.tags.join(' · ')}</>}
+            </div>
+            <div class="ttl">{post.data.title}</div>
+            <div class="dek">{post.data.description}</div>
+          </a>
+        ))
+      }
+    </div>
+    <a class="feed-link" href="/writing">all field notes ▸</a>
+    &nbsp;·&nbsp;
+    <a class="feed-link" href="/rss.xml">rss ▸</a>
+  </section>
+
+  <!-- CONTACT ---------------------------------------------------------- -->
+  <section id="contact">
+    <h2><span class="n">04</span>get in touch</h2>
+    <div class="contact">
+      <form id="contact-form" action={formAction} method="POST" data-email={SITE.email} data-formspree={FORMSPREE_ID ? 'true' : 'false'}>
+        <div class="field">
+          <label for="cname">name <span class="req">*</span></label>
+          <input type="text" id="cname" name="name" placeholder="Ada Lovelace" required />
+        </div>
+        <div class="field">
+          <label for="cemail">email <span class="req">*</span></label>
+          <input type="email" id="cemail" name="email" placeholder="you@example.com" required />
+        </div>
+        <div class="field">
+          <label for="cmsg">message <span class="req">*</span></label>
+          <textarea id="cmsg" name="message" placeholder="Let's talk about..." required></textarea>
+        </div>
+        <button class="btn solid" type="submit">send message ▸</button>
+        <div class="form-status" id="form-status" role="status" aria-live="polite"></div>
+      </form>
+      <div class="cinfo">
+        <div class="row"><span class="k">location ·</span> <span class="v">{SITE.location}</span></div>
+        <div class="row"><span class="k">email ····</span> <a href={SOCIAL.email}>{SITE.email}</a></div>
+        <div class="row"><span class="k">github ···</span> <a href={SOCIAL.github}>@nateburley</a></div>
+        <div class="row"><span class="k">linkedin ·</span> <a href={SOCIAL.linkedin}>nathaniel-burley</a></div>
+        <div class="row"><span class="k">twitter ··</span> <a href={SOCIAL.twitter}>@natemburl</a></div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  // ── typing effect for the command prompt ───────────────────────────────
+  const typed = document.getElementById('typed');
+  if (typed) {
+    const cmd = 'cat about.md && ls projects/';
+    let i = 0;
+    const tick = () => {
+      if (i <= cmd.length) {
+        typed.textContent = cmd.slice(0, i++);
+        setTimeout(tick, 42);
+      }
+    };
+    tick();
+  }
+
+  // ── scroll-spy: highlight the current section in the sidebar ────────────
+  const navItems = Array.from(document.querySelectorAll('#nav li[data-key]')) as HTMLElement[];
+  const spied = ['about', 'work', 'contact'];
+  const setActive = (key: string) => {
+    navItems.forEach((li) => {
+      const on = li.dataset.key === key;
+      li.classList.toggle('active', on);
+      let marker = li.querySelector('.marker');
+      if (on && !marker) {
+        marker = document.createElement('span');
+        marker.className = 'marker';
+        marker.textContent = '◀';
+        li.appendChild(marker);
+      } else if (!on && marker && spied.includes(li.dataset.key ?? '')) {
+        marker.remove();
+      }
+    });
+  };
+  const sections = spied.map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
+  if ('IntersectionObserver' in window && sections.length) {
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => e.isIntersecting && setActive(e.target.id)),
+      { rootMargin: '-45% 0px -50% 0px' },
+    );
+    sections.forEach((s) => io.observe(s));
+  }
+
+  // ── contact form: Formspree if configured, else mailto fallback ─────────
+  const form = document.getElementById('contact-form') as HTMLFormElement | null;
+  const statusEl = document.getElementById('form-status');
+  if (form && statusEl) {
+    const hasFormspree = form.dataset.formspree === 'true';
+    const email = form.dataset.email ?? '';
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+      const name = String(data.get('name') ?? '');
+      const addr = String(data.get('email') ?? '');
+      const message = String(data.get('message') ?? '');
+
+      if (!hasFormspree) {
+        const subject = encodeURIComponent(`Portfolio message from ${name}`);
+        const body = encodeURIComponent(`${message}\n\n— ${name} (${addr})`);
+        window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+        statusEl.textContent = 'Opening your email app…';
+        statusEl.className = 'form-status ok';
+        return;
+      }
+
+      statusEl.textContent = 'sending…';
+      statusEl.className = 'form-status';
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          body: data,
+          headers: { Accept: 'application/json' },
+        });
+        if (res.ok) {
+          form.reset();
+          statusEl.textContent = '✓ message sent — thanks, I\'ll be in touch.';
+          statusEl.className = 'form-status ok';
+        } else {
+          statusEl.textContent = 'Hmm, that failed. Email me directly?';
+          statusEl.className = 'form-status err';
+        }
+      } catch {
+        statusEl.textContent = 'Network error. Email me directly?';
+        statusEl.className = 'form-status err';
+      }
+    });
+  }
+</script>

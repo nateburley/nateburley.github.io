@@ -1,0 +1,32 @@
+---
+// A single project card, styled like a terminal "widget" panel.
+import type { Project } from '../data/projects';
+
+interface Props {
+  project: Project;
+  last?: boolean;
+}
+const { project, last = false } = Astro.props;
+const isLink = !project.wip;
+const Tag = isLink ? 'a' : 'div';
+const branch = last ? '└─' : '├─';
+---
+
+<Tag
+  class={'proj' + (project.wip ? ' soon' : '')}
+  href={isLink ? project.link : undefined}
+  target={isLink ? '_blank' : undefined}
+  rel={isLink ? 'noopener noreferrer' : undefined}
+>
+  <div class="bar">
+    <span class="repo">{branch} {project.name}</span>
+    <span class="ext">{project.wip ? 'wip' : 'github ▸'}</span>
+  </div>
+  <div class="shot">
+    <img src={project.image} alt={project.title} loading="lazy" />
+  </div>
+  <div class="pbody">
+    <h3>{project.title}</h3>
+    <p>{project.description}</p>
+  </div>
+</Tag>

@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="404 — not found" statusPath="~/portfolio">
+  <Fragment slot="status">
+    <span class="led" style="background:var(--red); box-shadow:0 0 6px var(--red)"></span>
+    error: <span style="color:var(--red)">404 — no such file</span>
+  </Fragment>
+
+  <div class="crumb"><span class="p">$</span> cat the-page-you-wanted.html</div>
+  <div class="eyebrow">~ error</div>
+  <h1>404</h1>
+  <div class="sub">No such file or directory.</div>
+  <p class="lead">
+    The page you're looking for isn't here — it may have been moved, renamed, or never existed.
+    Let's get you back to solid ground.
+  </p>
+  <div class="actions">
+    <a class="btn solid" href="/">cd ~ (home)</a>
+    <a class="btn" href="/writing">ls writing/</a>
+  </div>
+</BaseLayout>
